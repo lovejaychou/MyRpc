@@ -14,6 +14,10 @@ public class MethodMessage implements Serializable {
     private String method;
     private Object[] params;
 
+    public MethodMessage(){
+
+    }
+
     public String getClassPath() {
         return classPath;
     }

@@ -16,12 +16,16 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import org.omg.SendingContext.RunTime;
 import org.rpc.constant.RpcConstant;
 import org.rpc.handler.ClientHandler;
 import org.rpc.handler.ServerHandler;
 import org.rpc.model.MethodMessage;
 import org.rpc.model.Result;
+import org.rpc.model.RpcCallback;
 import org.rpc.test.Person;
+import org.rpc.thread.ClientThreadPoolExecutor;
+import org.rpc.thread.MyThreadPoolExecutor;
 import org.rpc.util.ProtoHandler;
 import org.rpc.util.Serializer;
 
@@ -31,6 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReentrantLock;
@@ -43,22 +49,25 @@ public class MyRpcClient {
     private Channel channel;
     private long streamId = 1000000000000000000l;
     private Lock lock = null;
-    private Map<Long,Thread> threadMap = null;
+    private final static int ENCODE_WAY = Serializer.JSON_SERIALIZER;
+    private Map<Long,Object> threadMap = null;
     private volatile Map<Long,Object> data = null;
     private Map<Long,Class> resultMap = null;
+
 
     public MyRpcClient(String ip,int port){
         this.ip = ip;
         this.port = port;
         lock = new ReentrantLock();
-        threadMap = new HashMap<Long, Thread>();
+        threadMap = new HashMap<Long, Object>();
         data = new ConcurrentHashMap<Long, Object>();
         resultMap = new ConcurrentHashMap<Long, Class>();
+
     }
 
     public MyRpcClient(){
         lock = new ReentrantLock();
-        threadMap = new HashMap<Long, Thread>();
+        threadMap = new HashMap<Long, Object>();
         data = new ConcurrentHashMap<Long, Object>();
         resultMap = new ConcurrentHashMap<Long, Class>();
     }
@@ -66,6 +75,7 @@ public class MyRpcClient {
 
     public void init() throws InterruptedException {
         bootstrap = new Bootstrap();
+        ClientThreadPoolExecutor.init(Runtime.getRuntime().availableProcessors(), Executors.defaultThreadFactory(),new LinkedBlockingQueue<Runnable>(1024));
         EventLoopGroup client = new NioEventLoopGroup();
 
         bootstrap.group(client)
@@ -88,29 +98,6 @@ public class MyRpcClient {
     }
 
 
-    public void test(final Object[] params){
-
-        new Thread(){
-            @Override
-            public void run() {
-                System.out.println(Arrays.toString(params));
-                MethodMessage message = new MethodMessage("org.rpc.test","Person","buildPerson",params);
-                long streamId = send(message,Person.class);
-                System.out.println("client send the message successfully"+Arrays.toString(params)+"---"+streamId);
-
-                Result result = (Result) receiveBlock(streamId);
-                if(result.status == RpcConstant.OK){
-                    System.out.println(((Person)result.result).toString());
-                }else {
-                    System.out.println(streamId+"stream has a error call,the status is"+result.status);
-                }
-
-            }
-        }.start();
-
-
-    }
-
     //发送对应的信息,自定义的rpc传输协议
     public long send(MethodMessage msg,Class resultClass){
 
@@ -119,10 +106,9 @@ public class MyRpcClient {
             lock.lock();
             sendId = streamId++;
             resultMap.put(sendId,resultClass);
-            byte[] message = Serializer.encode(msg, Serializer.JDK_SERIALIZER);
-            ByteBuf byteBuf = ProtoHandler.protoEncoder(sendId,message,Serializer.JDK_SERIALIZER, RpcConstant.OK,RpcConstant.SEND);
+            byte[] message = Serializer.encode(msg, MyRpcClient.ENCODE_WAY);
+            ByteBuf byteBuf = ProtoHandler.protoEncoder(sendId,message,MyRpcClient.ENCODE_WAY, RpcConstant.OK,RpcConstant.SEND);
             channel.writeAndFlush(byteBuf);
-
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -130,6 +116,12 @@ public class MyRpcClient {
         }
 
         return sendId;
+    }
+
+    //异步调用，需要用户传入对应的回调函数。当接收到对应的数据后，rpc框架会自动使用线程池，调用对应的回调函数
+    public void sendAsync(MethodMessage msg, Class resultClass, RpcCallback callback){
+        long streamId = send(msg,resultClass);
+        threadMap.put(streamId,callback);
     }
 
     //阻塞的获取数据，如果数据还未回来，就挂起
@@ -149,86 +141,4 @@ public class MyRpcClient {
         return data.get(sendId);
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        final MyRpcClient client = new MyRpcClient();
-        client.init();
-
-
-
-
-
-
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params = new Object[2];
-                params[0] = "zmhddddddddddddddddddddddddddddddddddddddddddddd";
-                params[1] = 22;
-                client.test(params);
-            }
-        }.start();
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params1 = new Object[2];
-                params1[0] = "zmh2333333333333333333333333333333333333333333333333333333333333333333333";
-                params1[1] = 24;
-                client.test(params1);
-            }
-        }.start();
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params3 = new Object[2];
-                params3[0] = "zmh35555555555555555555555555555555555555555555555555555555555555555555555";
-                params3[1] = 26;
-                client.test(params3);
-            }
-        }.start();
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params3 = new Object[2];
-                params3[0] = "zmh35555555555555555555555555555555555555555555555555555555555555555555555";
-                params3[1] = 26;
-                client.test(params3);
-            }
-        }.start();
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params3 = new Object[2];
-                params3[0] = "zmh35555555555555555555555555555555555555555555555555555555555555555555555";
-                params3[1] = 26;
-                client.test(params3);
-            }
-        }.start();
-
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params3 = new Object[2];
-                params3[0] = "zmh35555555555555555555555555555555555555555555555555555555555555555555555";
-                params3[1] = 26;
-                client.test(params3);
-            }
-        }.start();
-
-        new Thread(){
-            @Override
-            public void run() {
-                Object[] params3 = new Object[2];
-                params3[0] = "zmh35555555555555555555555555555555555555555555555555555555555555555555555";
-                params3[1] = 26;
-                client.test(params3);
-            }
-        }.start();
-
-    }
 }

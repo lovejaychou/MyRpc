@@ -11,7 +11,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import org.rpc.handler.ServerHandler;
-import org.rpc.util.MyThreadPoolExecutor;
+import org.rpc.thread.MyThreadPoolExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;

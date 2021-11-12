@@ -1,4 +1,4 @@
-package org.rpc.util;
+package org.rpc.thread;
 
 
 import java.util.Queue;

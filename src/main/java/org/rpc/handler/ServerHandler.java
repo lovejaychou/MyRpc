@@ -5,8 +5,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.rpc.constant.RpcConstant;
-import org.rpc.model.MethodMessage;
 import org.rpc.model.RpcProtoModel;
+import org.rpc.thread.MethodRunnable;
+import org.rpc.thread.MyThreadPoolExecutor;
 import org.rpc.util.*;
 
 /*
@@ -16,7 +17,7 @@ import org.rpc.util.*;
 * */
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
-    public static int encodeWay = 1;//默认为json
+    public static int encodeWay = Serializer.JSON_SERIALIZER;//默认为json
 
     public ServerHandler(){
 
@@ -54,7 +55,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             RpcProtoModel model = ProtoHandler.protoDecoder(rcvByteBuf);
             byte[] sendMessage = Serializer.encode(null,encodeWay);
             System.out.println("server-------streamId:"+model.streamId+"-----blocking queue is full");
-            ByteBuf sebdByteBuf = ProtoHandler.protoEncoder(model.streamId,sendMessage,Serializer.JSON_SERIALIZER, RpcConstant.QUEUE_FULL,RpcConstant.RESPONSE);
+            ByteBuf sebdByteBuf = ProtoHandler.protoEncoder(model.streamId,sendMessage,ServerHandler.encodeWay, RpcConstant.QUEUE_FULL,RpcConstant.RESPONSE);
 
             ChannelSendUtil.send(channel, sebdByteBuf);
         }

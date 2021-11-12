@@ -1,7 +1,11 @@
 package org.rpc.util;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.gson.Gson;
 import org.rpc.model.MethodMessage;
+import org.rpc.model.RpcProtoModel;
 
 import java.io.*;
 
@@ -10,7 +14,14 @@ public class Serializer {
     public final static int JSON_SERIALIZER = 1;
     public final static int PROTOBUF_SERIALIZER = 2;
     public final static int HESSIAN_SERIALIZER = 3;
+    public final static int KYRO_SERIALIZER = 4;
     private static Gson gson = new Gson();
+    private static Kryo kryo = new Kryo();
+
+    static{
+        kryo.setRegistrationRequired(false);
+    }
+
 
     public static byte[] jdkEncode(Object o)  {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -23,15 +34,6 @@ public class Serializer {
             System.out.println("the jdk encoding occur errors");
             e.printStackTrace();
         }
-
-//        byteArrayOutputStream.flush();
-//        byte[] bytes = new byte[byteArrayOutputStream.size()];
-//        try {
-//            byteArrayOutputStream.write(bytes);
-//            byteArrayOutputStream.flush();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
         byte[] bytes = byteArrayOutputStream.toByteArray();
         System.out.println("jdk encoding : the length of byte array is " + bytes.length);
@@ -72,6 +74,8 @@ public class Serializer {
             return Serializer.jdkEncode(message);
         }else if(encodeWay == Serializer.JSON_SERIALIZER){
             return Serializer.jsonEncode(message);
+        }else if(encodeWay == Serializer.KYRO_SERIALIZER){
+            return Serializer.kyroEncode(message);
         }
         System.out.println("-------unknown encoding way--------");
         return null;
@@ -82,9 +86,34 @@ public class Serializer {
             return Serializer.jsonDecode(new String(message),clazz);
         }else if (encodeWay == (1<<Serializer.JDK_SERIALIZER)){
             return Serializer.jdkDecode(message);
+        }else if(encodeWay == (1<<Serializer.KYRO_SERIALIZER)){
+            return Serializer.kyroDecode(message,clazz);
         }
         System.out.println("-------unknown decoding way--------");
         return null;
+    }
+
+    public static byte[] kyroEncode(Object message){
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Output output = new Output(outputStream);
+        kryo.writeClassAndObject(output,message);
+        output.close();
+
+        byte[] bytes = outputStream.toByteArray();
+        System.out.println("encode-----"+bytes.length+"*************************");
+        System.out.println("kyroencoding... ");
+        return bytes;
+    }
+
+    public static Object kyroDecode(byte[] message,Class clazz){
+
+        System.out.println("decode-----"+message.length+"*************************");
+        System.out.println("kyrodecoding... the class name is " + clazz.getName());
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(message);
+        Input input = new Input(inputStream);
+        input.close();
+        return kryo.readClassAndObject(input);
     }
 
 //    public Object hessianEncode(Object o){

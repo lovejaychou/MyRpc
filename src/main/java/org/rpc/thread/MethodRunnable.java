@@ -1,11 +1,15 @@
-package org.rpc.util;
+package org.rpc.thread;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import org.rpc.constant.RpcConstant;
 import org.rpc.handler.MethodHandler;
+import org.rpc.handler.ServerHandler;
 import org.rpc.model.MethodMessage;
 import org.rpc.model.RpcProtoModel;
+import org.rpc.util.ChannelSendUtil;
+import org.rpc.util.ProtoHandler;
+import org.rpc.util.Serializer;
 
 
 import static org.rpc.handler.ServerHandler.encodeWay;
@@ -31,7 +35,7 @@ public class MethodRunnable implements Runnable {
         Object result = MethodHandler.invokeMethod(rcvMessage);
         byte[] sendMessage = Serializer.encode(result,encodeWay);
         System.out.println("server-------streamId:"+model.streamId);
-        ByteBuf sebdByteBuf = ProtoHandler.protoEncoder(model.streamId,sendMessage,Serializer.JSON_SERIALIZER, RpcConstant.OK,RpcConstant.RESPONSE);
+        ByteBuf sebdByteBuf = ProtoHandler.protoEncoder(model.streamId,sendMessage, ServerHandler.encodeWay, RpcConstant.OK,RpcConstant.RESPONSE);
 
         ChannelSendUtil.send(channel, sebdByteBuf);
 
