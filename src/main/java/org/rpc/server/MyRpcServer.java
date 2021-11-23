@@ -64,7 +64,7 @@ public class MyRpcServer {
 
     //初始化RpcServer
     public void init() throws InterruptedException {
-        accept = new NioEventLoopGroup();
+        accept = new NioEventLoopGroup(1);
         read = new NioEventLoopGroup();
         MyThreadPoolExecutor.init(coreThreadSize,threadFactory,queue);
         try {
@@ -92,6 +92,7 @@ public class MyRpcServer {
         }finally {
             System.out.println("netty has closed");
             accept.shutdownGracefully();
+            read.shutdownGracefully();
         }
 
     }

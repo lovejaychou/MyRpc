@@ -1,18 +1,14 @@
 package org.rpc.handler;
 
-import com.google.gson.Gson;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.xml.XmlElementStart;
 import org.rpc.constant.RpcConstant;
 import org.rpc.model.Result;
-import org.rpc.model.RpcCallback;
+import org.rpc.callback.RpcCallback;
 import org.rpc.model.RpcProtoModel;
-import org.rpc.test.Person;
 import org.rpc.thread.ClientThreadPoolExecutor;
-import org.rpc.thread.MyThreadPoolExecutor;
 import org.rpc.thread.ResultRunnable;
 import org.rpc.util.ProtoHandler;
 import org.rpc.util.Serializer;
@@ -51,22 +47,13 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                 data.put(o.streamId, new Result(o.status,res));
                 LockSupport.unpark((Thread)o1);
             }else if(o1 instanceof RpcCallback){
-//                new Thread(){
-//                    @Override
-//                    public void run() {
-//                        RpcCallback callback = (RpcCallback) o1;
-//                        callback.callback(res);
-//                    }
-//                }.start();
 
                 ResultRunnable runnable = new ResultRunnable((RpcCallback) o1,res);
-                //runnable.run();
                 ClientThreadPoolExecutor.handler(runnable);
             }
         }else{
             data.put(o.streamId, new Result(o.status,null));
         }
-
 
     }
 
@@ -85,4 +72,5 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("client active");
     }
+
 }

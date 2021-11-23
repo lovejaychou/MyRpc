@@ -8,7 +8,7 @@ import org.rpc.callback.RpcCallback;
 
 import java.util.Arrays;
 
-public class TestClient {
+public class TestClient2 {
 
     public static void main(String[] args) throws InterruptedException {
         final MyRpcClient client = new MyRpcClient();
@@ -18,18 +18,19 @@ public class TestClient {
             @Override
             public void run() {
                 Object[] params3 = new Object[2];
-                params3[0] = "zmh666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666";
+                params3[0] = "lllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll";
                 params3[1] = 26;
                 test(client,params3);
             }
         }.start();
 
         Thread.sleep(2000);
+
         new Thread(){
             @Override
             public void run() {
                 Object[] params3 = new Object[2];
-                params3[0] = "zmh55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555";
+                params3[0] = "llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll";
                 params3[1] = 22;
                 test2(client,params3);
             }

@@ -1,4 +1,4 @@
-package org.rpc.model;
+package org.rpc.callback;
 
 public interface RpcCallback<T> {
 

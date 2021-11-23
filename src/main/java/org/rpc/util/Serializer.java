@@ -15,8 +15,8 @@ public class Serializer {
     public final static int PROTOBUF_SERIALIZER = 2;
     public final static int HESSIAN_SERIALIZER = 3;
     public final static int KYRO_SERIALIZER = 4;
-    private static Gson gson = new Gson();
-    private static Kryo kryo = new Kryo();
+    private final static Gson gson = new Gson();
+    private final static Kryo kryo = new Kryo();
 
     static{
         kryo.setRegistrationRequired(false);

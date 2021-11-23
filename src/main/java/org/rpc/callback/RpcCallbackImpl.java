@@ -1,4 +1,4 @@
-package org.rpc.model;
+package org.rpc.callback;
 
 import org.rpc.test.Person;
 

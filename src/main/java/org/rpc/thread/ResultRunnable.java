@@ -1,7 +1,6 @@
 package org.rpc.thread;
 
-import org.rpc.model.Result;
-import org.rpc.model.RpcCallback;
+import org.rpc.callback.RpcCallback;
 
 public class ResultRunnable implements Runnable {
 

@@ -64,7 +64,7 @@ public class ProtoHandler {
     * */
     public static RpcProtoModel protoDecoder(ByteBuf byteBuf){
 
-        byte magicBuf = byteBuf.readByte();
+        byte magic = byteBuf.readByte();
 
         byte version = byteBuf.readByte();
 
