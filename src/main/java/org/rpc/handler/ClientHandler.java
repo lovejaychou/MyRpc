@@ -12,6 +12,8 @@ import org.rpc.thread.ClientThreadPoolExecutor;
 import org.rpc.thread.ResultRunnable;
 import org.rpc.util.ProtoHandler;
 import org.rpc.util.Serializer;
+
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.locks.LockSupport;
 
@@ -47,7 +49,6 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
                 data.put(o.streamId, new Result(o.status,res));
                 LockSupport.unpark((Thread)o1);
             }else if(o1 instanceof RpcCallback){
-
                 ResultRunnable runnable = new ResultRunnable((RpcCallback) o1,res);
                 ClientThreadPoolExecutor.handler(runnable);
             }
@@ -55,6 +56,12 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
             data.put(o.streamId, new Result(o.status,null));
         }
 
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        System.out.println("client is inactive"+new Date().getTime());
     }
 
     @Override

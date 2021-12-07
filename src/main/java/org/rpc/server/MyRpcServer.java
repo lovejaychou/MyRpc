@@ -77,7 +77,7 @@ public class MyRpcServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
+                            socketChannel.pipeline().addFirst(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
                             socketChannel.pipeline().addLast(new LengthFieldPrepender(4));
                             socketChannel.pipeline().addLast(new ServerHandler());
                         }

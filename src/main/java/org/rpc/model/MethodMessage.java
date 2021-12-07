@@ -13,6 +13,7 @@ public class MethodMessage implements Serializable {
     private String className;
     private String method;
     private Object[] params;
+    private Class[] types;
 
     public MethodMessage(){
 
@@ -34,10 +35,16 @@ public class MethodMessage implements Serializable {
         return params;
     }
 
-    public MethodMessage(String classpath, String className, String method, Object[] params){
+    public Class[] getTypes(){
+        return types;
+    }
+
+    public MethodMessage(String classpath, String className, String method, Object[] params,Class[] types){
         this.classPath = classpath;
         this.className = className;
         this.params = params;
         this.method = method;
+        this.types = types;
     }
+
 }

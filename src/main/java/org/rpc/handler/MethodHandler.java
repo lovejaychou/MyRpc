@@ -20,15 +20,22 @@ public class MethodHandler {
         String className = message.getClassName();
         String methodName = message.getMethod();
         Object[] params = message.getParams();
+        Class[] types = message.getTypes();
 
         Class objClass = findClass(classPath,className);
 
+        System.out.println("invokeMethod*******"+methodName);
         Method objMethod = null;
-        for(Method method:objClass.getMethods()){
-            if (method.getName().equals(methodName)){
-                objMethod = method;
-                break;
-            }
+//        for (Method method:objClass.getMethods()){
+//            if (method.getName().equals(methodName)){
+//                objMethod = method;
+//            }
+//        }
+        try {
+            objMethod = objClass.getMethod(methodName,types);
+        } catch (NoSuchMethodException e) {
+            System.out.println("there is no method ->"+className+"/"+methodName);
+            return null;
         }
 
         Object result = null;

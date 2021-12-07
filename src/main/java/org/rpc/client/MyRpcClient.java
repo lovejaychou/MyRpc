@@ -2,10 +2,7 @@ package org.rpc.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -18,6 +15,8 @@ import org.rpc.callback.RpcCallback;
 import org.rpc.thread.ClientThreadPoolExecutor;
 import org.rpc.util.ProtoHandler;
 import org.rpc.util.Serializer;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +34,7 @@ public class MyRpcClient {
     private Channel channel;
     private long streamId = 1000000000000000000l;
     private Lock lock = null;
-    private final static int ENCODE_WAY = Serializer.JSON_SERIALIZER;
+    private final static int ENCODE_WAY = Serializer.JDK_SERIALIZER;
     private Map<Long,Object> threadMap = null;
     private volatile Map<Long,Object> data = null;
     private Map<Long,Class> resultMap = null;
@@ -48,7 +47,6 @@ public class MyRpcClient {
         threadMap = new ConcurrentHashMap<Long, Object>();
         data = new ConcurrentHashMap<Long, Object>();
         resultMap = new ConcurrentHashMap<Long, Class>();
-
     }
 
     public MyRpcClient(){
@@ -64,30 +62,39 @@ public class MyRpcClient {
         ClientThreadPoolExecutor.init(Runtime.getRuntime().availableProcessors(), Executors.defaultThreadFactory(),new LinkedBlockingQueue<Runnable>(1024));
         EventLoopGroup client = new NioEventLoopGroup();
 
-
-
         try {
             bootstrap.group(client)
                     .channel(NioSocketChannel.class)
+                    .option(ChannelOption.SO_KEEPALIVE,true)
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             //用于解码，lengthFieldOffset是长
                             // 度字段的偏移字节量、lengthFieldLength是长度字段占用的字节个数
-                            socketChannel.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
+                            socketChannel.pipeline().addFirst(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
                             //LengthFieldPrepender是一个outBoundHandler，它会帮我们把数据包的长度对应的长度填写到长度字段中
                             socketChannel.pipeline().addLast(new LengthFieldPrepender(4));
                             socketChannel.pipeline().addLast(new ClientHandler(threadMap,data,resultMap));
                         }
                     });
-            ChannelFuture future = bootstrap.connect(ip, port).sync();
-            channel = future.channel();
+            try {
+                ChannelFuture future = bootstrap.connect(ip, port).sync();
+                future.addListener(new ChannelFutureListener() {
+                    public void operationComplete(ChannelFuture future) throws Exception {
+                        System.out.println("连接成功");
+                    }
+                });
+                channel = future.channel();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
 
             //future.channel().closeFuture().sync();
         }catch (Exception e){
             e.printStackTrace();
         }finally {
-            client.shutdownGracefully();
+            //client.shutdownGracefully();
         }
 
 

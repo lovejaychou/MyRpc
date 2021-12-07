@@ -10,6 +10,8 @@ import org.rpc.thread.MethodRunnable;
 import org.rpc.thread.MyThreadPoolExecutor;
 import org.rpc.util.*;
 
+import java.util.Date;
+
 /*
 * Author: zmh
 * function: solve the read of socket
@@ -71,6 +73,12 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        System.out.println("server is inactive"+new Date().getTime());
     }
 
     @Override
