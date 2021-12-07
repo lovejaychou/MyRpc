@@ -7,12 +7,16 @@ import org.rpc.model.RpcProtoModel;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /*
 * 用来执行方法
 * */
 public class MethodHandler {
+
+    Map<String,Method> cache = new HashMap<String, Method>();
 
     public static Object invokeMethod(MethodMessage message){
 

@@ -5,8 +5,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.rpc.constant.RpcConstant;
+import org.rpc.model.Future;
 import org.rpc.model.Result;
 import org.rpc.callback.RpcCallback;
+import org.rpc.model.RpcFuture;
 import org.rpc.model.RpcProtoModel;
 import org.rpc.thread.ClientThreadPoolExecutor;
 import org.rpc.thread.ResultRunnable;
@@ -51,6 +53,10 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
             }else if(o1 instanceof RpcCallback){
                 ResultRunnable runnable = new ResultRunnable((RpcCallback) o1,res);
                 ClientThreadPoolExecutor.handler(runnable);
+            }else if (o1 instanceof RpcFuture){
+                Thread.sleep(3000);
+                data.put(o.streamId, new Result(o.status,res));
+                ClientThreadPoolExecutor.handler((RpcFuture)o1);
             }
         }else{
             data.put(o.streamId, new Result(o.status,null));

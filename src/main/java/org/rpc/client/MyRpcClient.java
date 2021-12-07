@@ -8,10 +8,14 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
+import org.rpc.callback.MyFutureCall;
 import org.rpc.constant.RpcConstant;
 import org.rpc.handler.ClientHandler;
+import org.rpc.model.Future;
 import org.rpc.model.MethodMessage;
 import org.rpc.callback.RpcCallback;
+import org.rpc.model.RpcFuture;
+import org.rpc.model.RpcProtoModel;
 import org.rpc.thread.ClientThreadPoolExecutor;
 import org.rpc.util.ProtoHandler;
 import org.rpc.util.Serializer;
@@ -88,8 +92,6 @@ public class MyRpcClient {
             }catch (Exception e){
                 e.printStackTrace();
             }
-
-
             //future.channel().closeFuture().sync();
         }catch (Exception e){
             e.printStackTrace();
@@ -144,4 +146,10 @@ public class MyRpcClient {
         return data.get(sendId);
     }
 
+    public Future sendFuture(MethodMessage msg, Class resultClass){
+        long streamId = send(msg,resultClass);
+        Future future = new RpcFuture(new MyFutureCall(data,streamId));
+        threadMap.put(streamId,future);
+        return future;
+    }
 }
